@@ -5,15 +5,6 @@ module reservoir_regulation_module
     !!   S(t+1) = S(t) + [Qin(t) - Qout(t+1)] * dt
     !!   H(t+1) = f[S(t+1)]
     !!   Qout(t+1) = g[H(t+1)]
-    !!
-    !! f：水位-库容曲线（S-H）
-    !! g：水位-下泄流量曲线（H-Qout）
-    !!
-    !! 两条曲线均采用单调表格数据表示，并通过
-    !! 分段线性插值进行计算。
-    !!
-    !! 假定每座水库仅占据一个汇流栅格。
-    !! 计算得到的 Qout 作为该栅格出流，并传递至下游栅格。
 
     implicit none
     private
@@ -47,12 +38,6 @@ contains
         !!   s_new    ：时步结束时的水库库容，m3
         !!   h_new    ：时步结束时的水库水位，m
         !!   qout     ：调蓄后的下泄流量，并汇入下游栅格，m3/s
-        !!
-        !! 说明
-        !!   1. 显式满足水量连续性约束。
-        !!   2. H-Q 曲线用于表示采用的水库调度/下泄规则。
-        !!   3. 当计算库容超出曲线表格范围时，通过
-        !!      增加校正泄流/溢流来保持水量平衡。
 
         real(dp), intent(in) :: qin, dt, s_prev
         type(ReservoirCurve), intent(in) :: curve
@@ -104,21 +89,18 @@ contains
 
             if (abs(q_new - q_old) <= eps * max(1.0_dp, abs(q_old))) exit
 
-            ! 当下泄曲线较陡时，采用适度松弛以提高迭代稳定性。
             q_old = 0.5_dp * q_old + 0.5_dp * q_new
         end do
 
         qout = q_new
         s_new = s_prev + (qin - qout) * dt
 
-        ! 库容上限处理：将超过最大库容的水量转换为附加溢流/泄流。
         if (s_new > smax) then
             excess_storage = s_new - smax
             qout = qout + excess_storage / dt
             s_new = smax
         end if
 
-        ! 库容下限处理：下泄不能使库容低于曲线表中的最小库容。
         if (s_new < smin) then
             available_release = max(0.0_dp, (s_prev + qin * dt - smin) / dt)
             qout = min(qout, available_release)
@@ -132,7 +114,6 @@ contains
 
 
     function interp_linear(x, y, n, xq) result(yq)
-        !! 采用端点截断的分段线性插值。
 
         integer, intent(in) :: n
         real(dp), intent(in) :: x(n), y(n), xq

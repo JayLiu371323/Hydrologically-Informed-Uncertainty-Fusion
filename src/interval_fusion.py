@@ -1,11 +1,3 @@
-"""
-Uncertainty interval fusion and multi-objective optimization.
-
-The released implementation accepts two externally generated prediction
-intervals and does not include restricted observational data or the complete
-Grid-Xinanjiang model.
-"""
-
 import numpy as np
 from platypus import NSGAII, IBEA, SPEA2, GDE3, Problem, Real
 

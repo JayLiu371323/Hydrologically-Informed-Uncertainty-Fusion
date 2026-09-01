@@ -1,9 +1,3 @@
-"""
-Author-developed AE-LSTM components for streamflow forecasting.
-
-Observational data and pretrained weights are not included.
-"""
-
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.layers import (
